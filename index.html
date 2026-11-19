@@ -16,6 +16,7 @@
     <a href="#conv">Convolution</a>
     <a href="#pool">Pooling</a>
     <a href="#mlp">Dense network</a>
+    <a href="#rnn">RNN</a>
   </nav>
 </header>
 <main>
@@ -109,11 +110,30 @@
   </div>
 </section>
 
+<section id="tab-rnn">
+  <div class="card intro"><p>A <b>recurrent</b> network reads a sequence one item at a time and carries a <b>hidden state</b> h forward, a small vector that acts as its memory. At every step it reuses the <i>same</i> weights: it mixes the new input with the previous hidden state, then squashes the result with tanh. Drawn "unrolled" like below, it looks like a chain of copies, but it's one network applied repeatedly.</p></div>
+  <div class="card">
+    <div class="controls">
+      <label>Sequence <input type="text" id="rnnWord" value="hello" maxlength="8" style="width:120px"></label>
+      <button class="primary" id="rnnPlay">▶ Play</button><button id="rnnStep">Step</button><button id="rnnAll">Show all</button><button id="rnnReset">Reset</button>
+      <label>Speed <input type="range" id="rnnSpeed" min="200" max="1600" value="1000"></label>
+    </div>
+    <p class="hint">Try <b>cat</b> vs <b>bat</b>: the last two letters are the same, but the final hidden state is different, because the first letter's influence is carried forward through h. (The weights are random, not trained. The point is the mechanics, not the predictions.)</p>
+    <div class="eq">hₜ = tanh( W<sub>xh</sub>·xₜ + W<sub>hh</sub>·hₜ₋₁ + b )</div>
+    <div class="scroll"><svg id="rnnSvg" height="430"></svg></div>
+  </div>
+  <div class="card">
+    <div class="lbl" id="rnnCalcTitle">Step calculation</div>
+    <div class="row" id="rnnCalc" style="gap:10px"></div>
+  </div>
+</section>
+
 </main>
 <script src="js/helpers.js"></script>
 <script src="js/conv.js"></script>
 <script src="js/pool.js"></script>
 <script src="js/mlp.js"></script>
+<script src="js/rnn.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
