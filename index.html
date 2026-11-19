@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Neural Networks, Visualized</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>Neural Networks, Visualized</h1>
+  <p class="sub">Step through what each kind of layer actually computes, one number at a time.</p>
+  <nav>
+    <a href="#conv">Convolution</a>
+  </nav>
+</header>
+<main>
+
+<section id="tab-conv">
+  <div class="card intro"><p>A convolutional layer slides a small grid of weights, the <b>kernel</b> (or filter), across the image. At each position it multiplies the kernel by the pixels underneath, adds the products up, and writes that single number into the output, called a <b>feature map</b>. Different kernels light up for different patterns: vertical edges, horizontal edges, outlines. In a real CNN the kernel values aren't hand-picked like these; they're learned during training.</p></div>
+  <div class="card">
+    <div class="controls">
+      <label>Image <select id="cImg"><option value="seven">Digit 7</option><option value="x">X</option><option value="box">Box</option><option value="plus">Plus</option><option value="blank">Blank (draw your own)</option></select></label>
+      <label>Kernel <select id="cKer"></select></label>
+      <label>Stride <select id="cStride"><option>1</option><option>2</option></select></label>
+      <label>Padding <select id="cPad"><option>0</option><option>1</option></select></label>
+    </div>
+    <div class="controls">
+      <button class="primary" id="cPlay">▶ Play</button><button id="cStep">Step</button><button id="cAll">Show all</button><button id="cReset">Reset</button>
+      <label>Speed <input type="range" id="cSpeed" min="60" max="720" value="480"></label>
+    </div>
+    <p class="hint" id="cKerDesc"></p>
+    <div class="row">
+      <div><div class="lbl">Input <span id="cInSize"></span> · click &amp; drag to draw</div><div class="grid" id="cIn"></div></div>
+      <div>
+        <div class="lbl">Kernel 3×3 · editable</div><div class="kgrid" id="cK"></div>
+        <div class="lbl" style="margin-top:20px">This position</div><div class="calc" id="cCalc"></div>
+      </div>
+      <div><div class="lbl">Feature map <span id="cOutSize"></span> · hover a cell</div><div class="grid" id="cOut"></div>
+        <div class="legend"><span><i style="background:var(--pos)"></i>positive</span><span><i style="background:var(--neg)"></i>negative</span></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="lbl">The same kernel on a real image</div>
+    <p class="hint">Here the kernel visits every pixel of a 160×160 grayscale picture (stride 1, edges extended). Hover the image to see the 3×3 patch under the kernel at that spot.</p>
+    <div class="controls">
+      <button class="primary" id="rSweep">▶ Sweep kernel</button>
+      <label class="file">Upload your own image<input type="file" accept="image/*" id="rFile"></label>
+      <button id="rScene">Sample scene</button>
+      <label>Show output as <select id="rMode"><option value="abs">|value| (pattern strength)</option><option value="relu">ReLU (positive only)</option><option value="signed">Signed (orange + / blue −)</option></select></label>
+    </div>
+    <div class="row">
+      <div><div class="lbl">Input (grayscale)</div><div class="stack"><canvas id="rSrc" width="160" height="160"></canvas><canvas id="rOver" width="320" height="320" style="image-rendering:auto"></canvas></div></div>
+      <div><div class="lbl">Under the kernel</div><div class="calc" id="rLens"></div></div>
+      <div><div class="lbl">Feature map</div><canvas id="rOut" class="pix" width="160" height="160"></canvas></div>
+    </div>
+  </div>
+</section>
+
+</main>
+<script src="js/helpers.js"></script>
+<script src="js/conv.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
