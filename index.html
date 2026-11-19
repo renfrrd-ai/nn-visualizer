@@ -14,9 +14,10 @@
 <nav class="toc" aria-label="Contents">
   <p>Contents</p>
   <ol>
+    <li><a href="#perc">The perceptron</a></li>
+    <li><a href="#mlp">Dense networks</a></li>
     <li><a href="#conv">Convolution</a></li>
     <li><a href="#pool">Pooling</a></li>
-    <li><a href="#mlp">Dense networks</a></li>
     <li><a href="#rnn">Recurrent networks</a></li>
     <li><a href="#attn">Attention</a></li>
   </ol>
@@ -25,90 +26,103 @@
 <article>
 <header class="title">
   <h1>How neural networks compute</h1>
-  <p class="lead">Every layer in a neural network is arithmetic: multiply, add, squash. This page lets you watch that arithmetic happen one number at a time, starting with the layers that let a network see images, and ending with the mechanism inside large language models.</p>
+  <p class="lead">Every layer in a neural network is arithmetic: multiply, add, squash. This page lets you watch that arithmetic happen one number at a time, starting from a single artificial neuron and ending with the mechanism inside large language models.</p>
   <p class="byline">Renfred Alonge, November 2026</p>
 </header>
 
-<section id="tab-conv">
-  <h2 id="conv"><span class="n">1</span>Convolution</h2>
-  <p>A convolutional layer slides a small grid of weights, the <b>kernel</b>, across an image. At each position it multiplies every weight by the pixel underneath, adds up the nine products, and writes that one number into a new grid called a <b>feature map</b>.</p>
-  <p>The kernel's numbers decide what it notices. A kernel with negatives on the left and positives on the right gives a large output only where the image gets brighter from left to right, so it finds vertical edges. In a trained network nobody writes these numbers by hand; they're learned.</p>
+<section id="tab-perc">
+  <h2 id="perc"><span class="n">1</span>The perceptron</h2>
+  <p>Every network on this page is built from one small part: the artificial <b>neuron</b>. The oldest and simplest version is the <b>perceptron</b>, introduced by Frank Rosenblatt in 1958. It takes a few numbers in, gives one number out, and has only three kinds of parts.</p>
+  <p>Each <b>input</b> <i>x</i> is multiplied by a <b>weight</b> <i>w</i>, which says how much that input matters and in which direction. The products are added together with a <b>bias</b> <i>b</i>, which sets how easily the neuron fires. That total is the <b>weighted sum</b> <i>z</i>. An <b>activation function</b> then turns <i>z</i> into the <b>output</b> <i>ŷ</i>. The perceptron's activation is a step: output 1 if <i>z</i> is at least zero, otherwise 0.</p>
+  <p class="eq"><i>z</i> = <i>w</i><sub>1</sub><i>x</i><sub>1</sub> + <i>w</i><sub>2</sub><i>x</i><sub>2</sub> + <i>b</i>, &nbsp;&nbsp; <i>ŷ</i> = step(<i>z</i>)</p>
 
   <figure>
-    <div class="controls">
-      <label>Image <select id="cImg"><option value="seven">Digit 7</option><option value="x">X</option><option value="box">Box</option><option value="plus">Plus</option><option value="blank">Blank</option></select></label>
-      <label>Kernel <select id="cKer"></select></label>
-      <label>Stride <select id="cStride"><option>1</option><option>2</option></select></label>
-      <label>Padding <select id="cPad"><option>0</option><option>1</option></select></label>
-    </div>
-    <div class="controls">
-      <div class="btns"><button class="primary" id="cPlay">Play</button><button id="cStep">Step</button><button id="cAll">Show all</button><button id="cReset">Reset</button></div>
-      <label>Speed <input type="range" id="cSpeed" min="60" max="720" value="480"></label>
-    </div>
-    <p class="note" id="cKerDesc"></p>
     <div class="row">
-      <div><div class="lbl">Input <span id="cInSize"></span>. Click and drag to draw.</div><div class="grid" id="cIn"></div></div>
-      <div>
-        <div class="lbl">Kernel. Type to change a weight.</div><div class="kgrid" id="cK"></div>
-        <div class="lbl" style="margin-top:22px">Pixel × weight at this position</div><div class="calc" id="cCalc"></div>
+      <div class="sliders">
+        <div class="lbl">Inputs</div>
+        <label><span><i>x</i>₁</span><input type="range" min="0" max="1" step="0.05" id="nx0"><span id="nvx0"></span></label>
+        <label><span><i>x</i>₂</span><input type="range" min="0" max="1" step="0.05" id="nx1"><span id="nvx1"></span></label>
+        <div class="lbl" style="margin-top:6px">Parameters</div>
+        <label><span><i>w</i>₁</span><input type="range" min="-2" max="2" step="0.1" id="nw0"><span id="nvw0"></span></label>
+        <label><span><i>w</i>₂</span><input type="range" min="-2" max="2" step="0.1" id="nw1"><span id="nvw1"></span></label>
+        <label><span><i>b</i></span><input type="range" min="-2" max="2" step="0.1" id="nb"><span id="nvb"></span></label>
+        <div class="lbl" style="margin-top:6px">Activation</div>
+        <select id="nAct"><option value="step">step (the original perceptron)</option><option value="sigmoid">sigmoid</option><option value="relu">ReLU</option></select>
+        <div class="btns" style="margin-top:10px"><button id="nAnd">Make it AND</button><button id="nOr">Make it OR</button></div>
       </div>
-      <div><div class="lbl">Feature map <span id="cOutSize"></span>. Hover a cell.</div><div class="grid" id="cOut"></div>
-        <div class="key"><span><i style="background:var(--pos)"></i>positive</span><span><i style="background:var(--neg)"></i>negative</span></div></div>
+      <div class="scroll" style="flex:1;min-width:300px"><svg id="nSvg" viewBox="0 0 740 300" style="width:100%;max-width:740px"></svg></div>
     </div>
-    <figcaption><b>Figure 1.</b> One kernel, one image. The red square is the kernel's current position; the cell it produces is outlined in the feature map. Padding adds a border of zeros (hatched) so the kernel can sit on the edge pixels; stride 2 skips every other position and halves the output.</figcaption>
+    <div class="row" style="margin-top:8px">
+      <div class="detail" id="nCalc" style="flex:1;min-width:280px"></div>
+      <div><div class="lbl">All four 0/1 inputs</div><div id="nTable"></div></div>
+    </div>
+    <figcaption><b>Figure 1.</b> One neuron, with every part named. With <i>w</i>₁ = <i>w</i>₂ = 1 and <i>b</i> = −1.5 it fires only when both inputs are 1, so it computes AND. Raise the bias to −0.5 and it computes OR. Same neuron, different weights, different behaviour.</figcaption>
   </figure>
 
-  <p>The same nine weights work on a real photograph. The only difference is scale: a 160×160 image means 25,600 positions instead of 64.</p>
+  <p>Nobody sets the weights by hand. A perceptron <b>learns</b> them from labelled <b>examples</b>: points whose correct answer, the <b>label</b> <i>y</i>, is known. The <b>perceptron learning rule</b> is simple. Show it an example. If the output is right, change nothing. If it's wrong, nudge every weight towards the right answer:</p>
+  <p class="eq"><i>w</i> ← <i>w</i> + η (<i>y</i> − <i>ŷ</i>) <i>x</i>, &nbsp;&nbsp; <i>b</i> ← <i>b</i> + η (<i>y</i> − <i>ŷ</i>)</p>
+  <p>The <b>learning rate</b> η sets the size of each nudge. One pass through every example is an <b>epoch</b>. Geometrically, the neuron splits the plane with a straight line, its <b>decision boundary</b> <i>w</i><sub>1</sub><i>x</i><sub>1</sub> + <i>w</i><sub>2</sub><i>x</i><sub>2</sub> + <i>b</i> = 0. Learning means moving that line until every point is on its correct side.</p>
 
   <figure>
     <div class="controls">
-      <div class="btns"><button class="primary" id="rSweep">Sweep kernel</button><label class="file">Upload an image<input type="file" accept="image/*" id="rFile"></label><button id="rScene">Use sample image</button></div>
-      <label>Show <select id="rMode"><option value="abs">strength, |value|</option><option value="relu">positive only (ReLU)</option><option value="signed">sign, blue and ochre</option></select></label>
+      <label>Examples <select id="tData"><option value="and">AND gate</option><option value="or">OR gate</option><option value="clusters">Two clusters</option><option value="xor">XOR gate</option></select></label>
+      <label>Learning rate η <select id="tEta"><option>0.1</option><option selected>0.5</option><option>1</option></select></label>
+      <div class="btns"><button class="primary" id="tRun">Train</button><button id="tStep">Step</button><button id="tReset">New random weights</button></div>
     </div>
     <div class="row">
-      <div><div class="lbl">Input, in grayscale. Hover to inspect.</div><div class="stack"><canvas id="rSrc" width="160" height="160"></canvas><canvas id="rOver" width="320" height="320" style="image-rendering:auto"></canvas></div></div>
-      <div><div class="lbl">Under the kernel</div><div class="calc" id="rLens"></div></div>
-      <div><div class="lbl">Feature map</div><canvas id="rOut" class="pix" width="160" height="160"></canvas></div>
+      <canvas id="tCanvas" style="width:340px;height:340px;border:1px solid var(--rule);display:block"></canvas>
+      <div style="flex:1;min-width:280px"><div class="detail" id="tState" style="min-height:0;margin-bottom:14px"></div><div class="detail" id="tMsg"></div></div>
     </div>
-    <figcaption><b>Figure 2.</b> The kernel from Figure 1 applied at every pixel, with edge pixels repeated so the output stays 160×160. Darker ink means a stronger response. Change the kernel above and this figure updates.</figcaption>
+    <div class="key"><span><i style="background:var(--ink);border-radius:50%"></i>label 1</span><span><i style="border:1.5px solid var(--ink);border-radius:50%"></i>label 0</span><span><i style="border:1.5px solid var(--red);border-radius:50%"></i>wrong side of the line</span></div>
+    <figcaption><b>Figure 2.</b> The perceptron learning rule at work. The shaded halves show what the neuron currently predicts: ochre for 1, blue for 0. Each mistake moves the line. For AND, OR and the two clusters it settles quickly. For XOR it never does.</figcaption>
   </figure>
-</section>
 
-<section id="tab-pool">
-  <h2 id="pool"><span class="n">2</span>Pooling</h2>
-  <p>A feature map is as large as the image it came from. <b>Pooling</b> shrinks it. A window slides over the map and keeps one number per window, either the largest (max pooling) or the average. Nothing is learned here; there are no weights.</p>
-  <p>Shrinking is useful. Later layers have fewer numbers to process, and a feature that shifts by a pixel usually stays in the same window, so the network cares less about exactly where something is.</p>
+  <p>If a straight line can separate the two classes, the data is <b>linearly separable</b>, and the perceptron is guaranteed to find such a line. XOR isn't. No single line puts (0, 1) and (1, 0) on one side and (0, 0) and (1, 1) on the other. Minsky and Papert made this limit famous in 1969, and it stalled the field for years.</p>
+  <p>The fix is more neurons. Two neurons each draw their own line, and a third combines their answers. The two middle neurons form a <b>hidden layer</b>: they are neither input nor output. With a hidden layer, a perceptron becomes a <b>neural network</b>.</p>
 
   <figure>
-    <div class="controls">
-      <label>Type <select id="pMode"><option value="max">max</option><option value="avg">average</option></select></label>
-      <label>Window <select id="pSize"><option value="2">2×2</option><option value="3">3×3</option></select></label>
-      <label>Stride <select id="pStride"><option value="2">2</option><option value="1">1</option></select></label>
-      <div class="btns"><button id="pRand">New random input</button><button id="pFromConv">Use Figure 1's feature map</button></div>
-    </div>
-    <div class="controls">
-      <div class="btns"><button class="primary" id="pPlay">Play</button><button id="pStep">Step</button><button id="pAll">Show all</button><button id="pReset">Reset</button></div>
-      <label>Speed <input type="range" id="pSpeed" min="60" max="720" value="420"></label>
-    </div>
     <div class="row">
-      <div><div class="lbl">Feature map <span id="pInSize"></span></div><div class="grid" id="pIn"></div></div>
-      <div><div class="lbl">This window</div><div class="calc" id="pCalc" style="max-width:260px"></div></div>
-      <div><div class="lbl">Pooled <span id="pOutSize"></span>. Hover a cell.</div><div class="grid" id="pOut"></div></div>
+      <canvas id="xCanvas" style="width:260px;height:260px;border:1px solid var(--rule);display:block"></canvas>
+      <div>
+        <p class="eq" style="font-size:17px;margin:0 0 6px"><i>h</i>₁ = step(<i>x</i>₁ + <i>x</i>₂ − 0.5)</p>
+        <p class="eq" style="font-size:17px;margin:0 0 6px"><i>h</i>₂ = step(−<i>x</i>₁ − <i>x</i>₂ + 1.5)</p>
+        <p class="eq" style="font-size:17px;margin:0 0 16px"><i>ŷ</i> = step(<i>h</i>₁ + <i>h</i>₂ − 1.5)</p>
+        <div id="xTable"></div>
+      </div>
     </div>
-    <figcaption><b>Figure 3.</b> Pooling step by step. With max pooling, the cell that wins each window is boxed; the others are discarded. Using Figure 1's feature map applies ReLU first, setting negatives to zero, as a real CNN would.</figcaption>
+    <figcaption><b>Figure 3.</b> XOR solved with one hidden layer of two neurons. <i>h</i>₁ is an OR neuron and <i>h</i>₂ a NAND neuron; each draws one dashed line. The output neuron fires only when both agree, which is exactly the band between the lines.</figcaption>
   </figure>
 
-  <figure>
-    <div class="row" id="pReal" style="gap:20px"></div>
-    <figcaption><b>Figure 4.</b> Figure 2's feature map after ReLU, pooled 2×2 three times using the type chosen in Figure 3. Each step keeps a quarter of the numbers. Fine detail goes first; the strongest edges last longest.</figcaption>
-  </figure>
+  <p>Modern networks make one more change: they replace the step with a smooth activation such as sigmoid or ReLU (try both in Figure 1). With a step, a small change in a weight either does nothing or flips the output. With a smooth function, every small change makes a small difference to the output. That is what lets <b>backpropagation</b> work out how to adjust every weight in a network with many layers at once.</p>
+
+  <p>The terms introduced here are used throughout the rest of the page:</p>
+  <dl class="terms">
+    <dt>Neuron (unit)</dt><dd>Computes a weighted sum of its inputs plus a bias, then applies an activation function.</dd>
+    <dt>Input <i>x</i></dt><dd>A number fed into a neuron: a pixel, a feature, or another neuron's output.</dd>
+    <dt>Weight <i>w</i></dt><dd>How strongly, and in which direction, an input pushes the neuron. Learned during training.</dd>
+    <dt>Bias <i>b</i></dt><dd>A number added to the sum, shifting how easily the neuron fires. Also learned.</dd>
+    <dt>Parameters</dt><dd>All the weights and biases together: everything training adjusts.</dd>
+    <dt>Weighted sum <i>z</i></dt><dd>The total <i>w</i>·<i>x</i> + <i>b</i>, before the activation. Also called the pre-activation.</dd>
+    <dt>Activation function</dt><dd>Turns <i>z</i> into the output: step, sigmoid, tanh, ReLU. The bend it adds is what lets stacked layers learn curved boundaries.</dd>
+    <dt>Output <i>ŷ</i></dt><dd>The neuron's or network's prediction.</dd>
+    <dt>Label <i>y</i></dt><dd>The correct answer for an example, used to measure mistakes.</dd>
+    <dt>Layer</dt><dd>A group of neurons that all read the same inputs. The input layer holds the data, hidden layers sit in the middle, and the output layer gives the answer.</dd>
+    <dt>Dense (fully connected)</dt><dd>A layer where every neuron reads every output of the layer before.</dd>
+    <dt>Training</dt><dd>Adjusting the parameters so the outputs match the labels.</dd>
+    <dt>Loss (error)</dt><dd>A number measuring how wrong the predictions are. Training tries to make it small.</dd>
+    <dt>Learning rate η</dt><dd>The size of each adjustment. Too small learns slowly; too large overshoots.</dd>
+    <dt>Epoch</dt><dd>One full pass through all the training examples.</dd>
+    <dt>Decision boundary</dt><dd>Where the network's answer changes from one class to the other. For a single neuron, a straight line.</dd>
+    <dt>Linearly separable</dt><dd>Data that one straight line (or flat plane) can split perfectly.</dd>
+    <dt>Backpropagation</dt><dd>The method for working out how much each weight in a multi-layer network contributed to the error, so each can be adjusted.</dd>
+  </dl>
 </section>
 
 <section id="tab-mlp">
-  <h2 id="mlp"><span class="n">3</span>Dense networks</h2>
-  <p>After convolution and pooling, a CNN usually ends with a few <b>dense</b> layers, and on their own they make up the plain neural network. Every neuron reads every output of the layer before it:</p>
+  <h2 id="mlp"><span class="n">2</span>Dense networks</h2>
+  <p>Figure 3 needed a hidden layer of two neurons. Make the layers wider, stack more of them, and swap the step for a smooth activation, and you have a <b>dense</b>, or fully connected, network: the plain neural network. Every neuron reads every output of the layer before it, exactly like the perceptron:</p>
   <p class="eq"><i>z</i> = <i>w</i><sub>1</sub><i>a</i><sub>1</sub> + <i>w</i><sub>2</sub><i>a</i><sub>2</sub> + … + <i>b</i>, &nbsp;&nbsp; <i>a</i> = <i>f</i>(<i>z</i>)</p>
-  <p>The weighted sum <i>z</i> goes through an activation function <i>f</i>, which bends the line. Without that bend, stacking layers would collapse into one big linear function.</p>
+  <p>The weighted sum <i>z</i> goes through an activation function <i>f</i>, which bends the line. Without that bend, stacking layers would collapse into one big linear function. The images, sequences and text in the chapters that follow all end up flowing through layers like this; CNNs, for example, usually finish with a few dense layers.</p>
 
   <figure>
     <div class="row">
@@ -125,12 +139,89 @@
     </div>
     <div class="lbl" style="margin-top:14px">Click a neuron to see its arithmetic</div>
     <div class="detail" id="mDetail">No neuron selected.</div>
-    <figcaption><b>Figure 5.</b> A 3–4–4–2 network. Ochre lines are positive weights, blue are negative, and thickness shows size. The two outputs pass through softmax so they read as probabilities. The weights are random, so the "classes" mean nothing yet; training is what would give them meaning.</figcaption>
+    <figcaption><b>Figure 4.</b> A 3–4–4–2 network. Ochre lines are positive weights, blue are negative, and thickness shows size. The two outputs pass through softmax so they read as probabilities. The weights are random, so the "classes" mean nothing yet; training is what would give them meaning.</figcaption>
+  </figure>
+</section>
+
+<section id="tab-conv">
+  <h2 id="conv"><span class="n">3</span>Convolution</h2>
+  <p>A convolutional layer slides a small grid of weights, the <b>kernel</b>, across an image. At each position it multiplies every weight by the pixel underneath, adds up the nine products, and writes that one number into a new grid called a <b>feature map</b>.</p>
+  <p>The kernel's numbers decide what it notices. A kernel with negatives on the left and positives on the right gives a large output only where the image gets brighter from left to right, so it finds vertical edges. In a trained network nobody writes these numbers by hand; they're learned.</p>
+
+  <figure>
+    <div class="controls">
+      <label>Image <select id="cImg"><option value="seven">Digit 7</option><option value="x">X</option><option value="box">Box</option><option value="plus">Plus</option><option value="blank">Blank</option></select></label>
+      <label>Filter <select id="cKer"></select></label>
+      <label>Stride <select id="cStride"><option>1</option><option>2</option></select></label>
+      <label>Padding <select id="cPad"><option>0</option><option>1</option></select></label>
+    </div>
+    <div class="controls">
+      <div class="btns"><button class="primary" id="cPlay">Play</button><button id="cStep">Step</button><button id="cAll">Show all</button><button id="cReset">Reset</button></div>
+      <label>Speed <input type="range" id="cSpeed" min="60" max="720" value="480"></label>
+    </div>
+    <p class="note" id="cKerDesc"></p>
+    <div class="row">
+      <div><div class="lbl">Input <span id="cInSize"></span>. Click and drag to draw.</div><div class="grid" id="cIn"></div></div>
+      <div>
+        <div class="lbl">Kernel. Type to change a weight.</div><div class="kgrid" id="cK"></div>
+        <div class="lbl" style="margin-top:14px">Colour channel weights</div><div class="chrow" id="cCh"><label>R<input type="number" step="any"></label><label>G<input type="number" step="any"></label><label>B<input type="number" step="any"></label></div>
+        <p class="note" id="cColorNote" style="display:none;margin:8px 0 0;max-width:200px">This grid is black and white, so only the 3×3 part shows here. Watch Figure 6 for the colour part.</p>
+        <div class="lbl" style="margin-top:22px">Pixel × weight at this position</div><div class="calc" id="cCalc"></div>
+      </div>
+      <div><div class="lbl">Feature map <span id="cOutSize"></span>. Hover a cell.</div><div class="grid" id="cOut"></div>
+        <div class="key"><span><i style="background:var(--pos)"></i>positive</span><span><i style="background:var(--neg)"></i>negative</span></div></div>
+    </div>
+    <figcaption><b>Figure 5.</b> One kernel, one image. The red square is the kernel's current position; the cell it produces is outlined in the feature map. Padding adds a border of zeros (hatched) so the kernel can sit on the edge pixels; stride 2 skips every other position and halves the output.</figcaption>
+  </figure>
+
+  <p>The same nine weights work on a real photograph. The only difference is scale: a 160×160 image means 25,600 positions instead of 64. A colour photo also has three numbers per pixel, red, green and blue, so the filter first mixes them using its channel weights. Grayscale filters mix them as brightness (0.30, 0.59, 0.11); the colour filters pick out one colour against the others. Real CNNs learn a separate 3×3 kernel for each channel; mixing first keeps the arithmetic readable.</p>
+
+  <figure>
+    <div class="controls">
+      <div class="btns"><button class="primary" id="rSweep">Sweep kernel</button><label class="file">Upload an image<input type="file" accept="image/*" id="rFile"></label><button id="rScene">Use sample image</button></div>
+      <label>Show <select id="rMode"><option value="abs">strength, |value|</option><option value="relu">positive only (ReLU)</option><option value="signed">sign, blue and ochre</option></select></label>
+    </div>
+    <div class="row">
+      <div><div class="lbl">Input. Hover to inspect.</div><div class="stack"><canvas id="rSrc" width="160" height="160"></canvas><canvas id="rOver" width="320" height="320" style="image-rendering:auto"></canvas></div></div>
+      <div><div class="lbl">Under the kernel</div><div class="calc" id="rLens"></div></div>
+      <div><div class="lbl">Feature map</div><canvas id="rOut" class="pix" width="160" height="160"></canvas></div>
+    </div>
+    <figcaption><b>Figure 6.</b> The filter from Figure 5 applied at every pixel, with edge pixels repeated so the output stays 160×160. Darker ink means a stronger response. Each cell under the kernel shows the pixel's true colour and its channel-mixed value. Try the edge filters, then the colour detectors on the red sun or the blue sky.</figcaption>
+  </figure>
+</section>
+
+<section id="tab-pool">
+  <h2 id="pool"><span class="n">4</span>Pooling</h2>
+  <p>A feature map is as large as the image it came from. <b>Pooling</b> shrinks it. A window slides over the map and keeps one number per window, either the largest (max pooling) or the average. Nothing is learned here; there are no weights.</p>
+  <p>Shrinking is useful. Later layers have fewer numbers to process, and a feature that shifts by a pixel usually stays in the same window, so the network cares less about exactly where something is.</p>
+
+  <figure>
+    <div class="controls">
+      <label>Type <select id="pMode"><option value="max">max</option><option value="avg">average</option></select></label>
+      <label>Window <select id="pSize"><option value="2">2×2</option><option value="3">3×3</option></select></label>
+      <label>Stride <select id="pStride"><option value="2">2</option><option value="1">1</option></select></label>
+      <div class="btns"><button id="pRand">New random input</button><button id="pFromConv">Use Figure 5's feature map</button></div>
+    </div>
+    <div class="controls">
+      <div class="btns"><button class="primary" id="pPlay">Play</button><button id="pStep">Step</button><button id="pAll">Show all</button><button id="pReset">Reset</button></div>
+      <label>Speed <input type="range" id="pSpeed" min="60" max="720" value="420"></label>
+    </div>
+    <div class="row">
+      <div><div class="lbl">Feature map <span id="pInSize"></span></div><div class="grid" id="pIn"></div></div>
+      <div><div class="lbl">This window</div><div class="calc" id="pCalc" style="max-width:260px"></div></div>
+      <div><div class="lbl">Pooled <span id="pOutSize"></span>. Hover a cell.</div><div class="grid" id="pOut"></div></div>
+    </div>
+    <figcaption><b>Figure 7.</b> Pooling step by step. With max pooling, the cell that wins each window is boxed; the others are discarded. Using Figure 5's feature map applies ReLU first, setting negatives to zero, as a real CNN would.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="row" id="pReal" style="gap:20px"></div>
+    <figcaption><b>Figure 8.</b> Figure 6's feature map after ReLU, pooled 2×2 three times using the type chosen in Figure 7. Each step keeps a quarter of the numbers. Fine detail goes first; the strongest edges last longest.</figcaption>
   </figure>
 </section>
 
 <section id="tab-rnn">
-  <h2 id="rnn"><span class="n">4</span>Recurrent networks</h2>
+  <h2 id="rnn"><span class="n">5</span>Recurrent networks</h2>
   <p>Every network so far sees its whole input at once. Text, speech and time series arrive in order, so a <b>recurrent</b> network reads one item at a time and keeps a small vector <i>h</i>, the <b>hidden state</b>, that carries what it has seen so far:</p>
   <p class="eq"><i>h<sub>t</sub></i> = tanh( <i>W</i><sub>xh</sub><i>x<sub>t</sub></i> + <i>W</i><sub>hh</sub><i>h</i><sub><i>t</i>−1</sub> + <i>b</i> )</p>
   <p>The same weights are used at every step. Drawing it "unrolled" makes it look like a chain of copies, but it is one network applied again and again.</p>
@@ -144,12 +235,12 @@
     <div class="scroll"><svg id="rnnSvg" height="430"></svg></div>
     <div class="lbl" id="rnnCalcTitle" style="margin-top:12px">Step calculation</div>
     <div class="row" id="rnnCalc" style="gap:10px"></div>
-    <figcaption><b>Figure 6.</b> Each character is fed in as a one-hot column, and the red arrows show where information flows at the current step. Try <i>cat</i>, then <i>bat</i>: the last two letters match, yet the final hidden state differs, because the first letter is still in <i>h</i>.</figcaption>
+    <figcaption><b>Figure 9.</b> Each character is fed in as a one-hot column, and the red arrows show where information flows at the current step. Try <i>cat</i>, then <i>bat</i>: the last two letters match, yet the final hidden state differs, because the first letter is still in <i>h</i>.</figcaption>
   </figure>
 </section>
 
 <section id="tab-attn">
-  <h2 id="attn"><span class="n">5</span>Attention</h2>
+  <h2 id="attn"><span class="n">6</span>Attention</h2>
   <p>A recurrent network squeezes everything it has read into one small vector <i>h</i>, and by the end of a long sentence the early words have faded. Large language models like GPT drop the recurrence. Instead, every word is allowed to look directly at every other word and decide which ones matter to it. That mechanism is <b>attention</b>.</p>
   <p>Each word's vector <i>x</i> is turned into three smaller vectors by three weight matrices:</p>
   <p class="eq"><i>q</i> = <i>x</i><i>W</i><sub>Q</sub>, &nbsp; <i>k</i> = <i>x</i><i>W</i><sub>K</sub>, &nbsp; <i>v</i> = <i>x</i><i>W</i><sub>V</sub></p>
@@ -168,7 +259,7 @@
     </div>
     <p class="note" id="aHeadDesc"></p>
     <div class="scroll"><svg id="aSvg" style="width:100%"></svg></div>
-    <figcaption><b>Figure 7.</b> Click any word to make it the query. Arcs and bars show how much of its attention goes to each word; the percentages always sum to 100%. With the causal mask on, a word can only see itself and the words before it.</figcaption>
+    <figcaption><b>Figure 10.</b> Click any word to make it the query. Arcs and bars show how much of its attention goes to each word; the percentages always sum to 100%. With the causal mask on, a word can only see itself and the words before it.</figcaption>
   </figure>
 
   <figure>
@@ -176,15 +267,15 @@
       <div><div class="lbl">Every query at once. Click a row.</div><div class="amat" id="aMat"></div></div>
       <div style="flex:1;min-width:300px"><div class="lbl">The selected row, step by step</div><div id="aBreak"></div></div>
     </div>
-    <figcaption><b>Figure 8.</b> The attention matrix: row <i>i</i> shows where word <i>i</i> looks, darker meaning more attention. Under the causal mask the upper triangle is hatched out, because when a model writes left to right, later words don't exist yet. The table shows how one row is computed.</figcaption>
+    <figcaption><b>Figure 11.</b> The attention matrix: row <i>i</i> shows where word <i>i</i> looks, darker meaning more attention. Under the causal mask the upper triangle is hatched out, because when a model writes left to right, later words don't exist yet. The table shows how one row is computed.</figcaption>
   </figure>
 
   <figure>
     <div id="aVec"></div>
-    <figcaption><b>Figure 9.</b> What attention changes. The output is the weighted average of the value vectors (here, the embeddings themselves). With the pronoun head, <i>it</i> starts as a pure pronoun and leaves carrying "noun" and "animate", so the next layer knows what it refers to.</figcaption>
+    <figcaption><b>Figure 12.</b> What attention changes. The output is the weighted average of the value vectors (here, the embeddings themselves). With the pronoun head, <i>it</i> starts as a pure pronoun and leaves carrying "noun" and "animate", so the next layer knows what it refers to.</figcaption>
   </figure>
 
-  <p>In a real model the embedding has thousands of numbers instead of six labelled ones, and all the weights are learned. Each layer runs dozens of heads side by side, then sends every word's result through a dense network like the one in chapter 3. Stack a few dozen of those layers and read off the last word's vector, and you get a prediction for the next word. Generate that word, append it, and repeat: that loop is a large language model.</p>
+  <p>In a real model the embedding has thousands of numbers instead of six labelled ones, and all the weights are learned. Each layer runs dozens of heads side by side, then sends every word's result through a dense network like the one in chapter 2. Stack a few dozen of those layers and read off the last word's vector, and you get a prediction for the next word. Generate that word, append it, and repeat: that loop is a large language model.</p>
 </section>
 
 <footer>Source on <a href="https://github.com/renfrrd-ai/nn-visualizer">GitHub</a>. Next chapters planned: LSTMs, a full CNN on a hand-drawn digit, and a full transformer block.</footer>
@@ -192,6 +283,7 @@
 </div>
 
 <script src="js/helpers.js"></script>
+<script src="js/perceptron.js"></script>
 <script src="js/conv.js"></script>
 <script src="js/pool.js"></script>
 <script src="js/mlp.js"></script>

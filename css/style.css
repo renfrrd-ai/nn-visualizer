@@ -133,3 +133,16 @@ table.br tr.m td{color:var(--muted);font-style:italic}
 table.br tr.self td:first-child{color:var(--red)}
 .bar{display:inline-block;height:9px;background:var(--ink);vertical-align:middle;margin-right:8px}
 .chip{display:inline-block;min-width:58px;text-align:center;padding:2px 6px;outline:1px solid var(--rule)}
+
+/* perceptron glossary */
+.terms{display:grid;grid-template-columns:200px minmax(0,1fr);gap:0;margin:28px 0 0;border-top:1px solid var(--ink);max-width:46rem;font-size:15.5px}
+.terms dt,.terms dd{padding:9px 0;border-bottom:1px solid var(--rule);margin:0}
+.terms dt{font-weight:600;padding-right:16px}
+.terms dd{color:#3a4250}
+@media (max-width:560px){.terms{grid-template-columns:1fr}.terms dt{border-bottom:0;padding-bottom:0}}
+
+/* colour channel weights */
+.chrow{display:flex;gap:6px}
+.chrow label{display:flex;flex-direction:column;align-items:center;font-size:13px;color:var(--muted);font-style:italic;gap:2px}
+.chrow input{width:54px;height:30px;text-align:center;border:1px solid var(--ink);border-radius:0;font:14px Literata,serif;font-variant-numeric:tabular-nums;color:var(--ink)}
+optgroup{font-style:normal;color:var(--muted)}
