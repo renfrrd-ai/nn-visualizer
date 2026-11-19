@@ -17,6 +17,7 @@ python3 -m http.server 8000
 | **Pooling** | Step through max or average pooling with 2×2 or 3×3 windows and stride 1 or 2. The winning cell is highlighted. You can pool the feature map from the Convolution tab, and watch a real feature map pooled three times (160 → 80 → 40 → 20). |
 | **Dense network** | A 3–4–4–2 fully connected network. Move the inputs, animate the forward pass, switch activations (ReLU, tanh, sigmoid), and click any neuron to see `z = Σ w·a + b` with the real numbers. |
 | **RNN** | Type a short word and watch it get read one character at a time. The unrolled view shows the hidden state carrying memory forward, with each step broken into `W_xh·x_t + W_hh·h_{t-1} + b → tanh`. |
+| **Attention** | The mechanism inside LLMs. Click any word in a sentence to see how much it attends to every other word, switch between hand-built and random heads, toggle the GPT-style causal mask, and follow one row from `q·k` through `÷√d` and softmax to the new vector. |
 
 Weights in the dense network and RNN are random, not trained. The goal is to show the mechanics, not to make predictions.
 
@@ -30,6 +31,7 @@ js/conv.js       Convolution tab
 js/pool.js       Pooling tab
 js/mlp.js        Dense network tab
 js/rnn.js        RNN tab
+js/attn.js       Attention tab
 js/main.js       starts the router
 ```
 
@@ -39,7 +41,8 @@ Each tab is a self-contained `<section id="tab-…">` with its own script. To ad
 
 - [ ] LSTM / GRU with gates visualised
 - [ ] Full CNN pipeline: conv → pool → flatten → dense on a hand-drawn digit
-- [ ] Attention / transformer block
+- [x] Attention (single head, causal mask)
+- [ ] Full transformer block: multi-head + feed-forward + residuals
 - [ ] Backpropagation view for the dense network
 
 ## License

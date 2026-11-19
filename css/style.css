@@ -116,3 +116,20 @@ footer a{color:var(--ink)}
   h2 .n{position:static;margin-right:12px}
   .title{padding-top:48px}
 }
+
+/* attention */
+.amat{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);position:relative;width:max-content;font-size:11.5px;font-variant-numeric:tabular-nums}
+.amat .ml{background:var(--paper);color:var(--muted);font-style:italic;padding:0 8px;display:flex;align-items:center;justify-content:flex-end;font-size:13px}
+.amat .ml.top{writing-mode:vertical-rl;transform:rotate(180deg);justify-content:flex-start;padding:6px 0;height:86px;align-items:center}
+.amat .ml.side{cursor:pointer;height:34px}
+.amat .ml.side.on{color:var(--red)}
+.amat .mc{height:34px;display:flex;align-items:center;justify-content:center;background:var(--paper);cursor:pointer}
+.amat .mc.pad{background:repeating-linear-gradient(135deg,var(--paper) 0 3px,#e3e5e9 3px 4px)}
+table.br{border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+table.br th{font-weight:400;font-style:italic;color:var(--muted);text-align:right;padding:4px 14px;border-bottom:1px solid var(--ink)}
+table.br td{padding:3px 14px;border-bottom:1px solid var(--rule);text-align:right}
+table.br th:first-child,table.br td:first-child{text-align:left;padding-left:0}
+table.br tr.m td{color:var(--muted);font-style:italic}
+table.br tr.self td:first-child{color:var(--red)}
+.bar{display:inline-block;height:9px;background:var(--ink);vertical-align:middle;margin-right:8px}
+.chip{display:inline-block;min-width:58px;text-align:center;padding:2px 6px;outline:1px solid var(--rule)}

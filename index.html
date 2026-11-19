@@ -18,13 +18,14 @@
     <li><a href="#pool">Pooling</a></li>
     <li><a href="#mlp">Dense networks</a></li>
     <li><a href="#rnn">Recurrent networks</a></li>
+    <li><a href="#attn">Attention</a></li>
   </ol>
 </nav>
 
 <article>
 <header class="title">
   <h1>How neural networks compute</h1>
-  <p class="lead">Every layer in a neural network is arithmetic: multiply, add, squash. This page lets you watch that arithmetic happen one number at a time, starting with the layers that let a network see images, and ending with one that remembers.</p>
+  <p class="lead">Every layer in a neural network is arithmetic: multiply, add, squash. This page lets you watch that arithmetic happen one number at a time, starting with the layers that let a network see images, and ending with the mechanism inside large language models.</p>
   <p class="byline">Renfred Alonge, November 2026</p>
 </header>
 
@@ -147,7 +148,46 @@
   </figure>
 </section>
 
-<footer>Source on <a href="https://github.com/renfrrd-ai/nn-visualizer">GitHub</a>. Next chapters planned: LSTMs, a full CNN on a hand-drawn digit, and attention.</footer>
+<section id="tab-attn">
+  <h2 id="attn"><span class="n">5</span>Attention</h2>
+  <p>A recurrent network squeezes everything it has read into one small vector <i>h</i>, and by the end of a long sentence the early words have faded. Large language models like GPT drop the recurrence. Instead, every word is allowed to look directly at every other word and decide which ones matter to it. That mechanism is <b>attention</b>.</p>
+  <p>Each word's vector <i>x</i> is turned into three smaller vectors by three weight matrices:</p>
+  <p class="eq"><i>q</i> = <i>x</i><i>W</i><sub>Q</sub>, &nbsp; <i>k</i> = <i>x</i><i>W</i><sub>K</sub>, &nbsp; <i>v</i> = <i>x</i><i>W</i><sub>V</sub></p>
+  <p>The <b>query</b> <i>q</i> says what a word is looking for. The <b>key</b> <i>k</i> says what a word offers. The <b>value</b> <i>v</i> is what it passes on if chosen. A word scores every other word by the dot product of its query with their keys, turns the scores into percentages with softmax, and takes that blend of their values as its new vector:</p>
+  <p class="eq">Attention(<i>Q</i>, <i>K</i>, <i>V</i>) = softmax( <i>QK</i><sup>⊤</sup> / √<i>d</i> ) <i>V</i></p>
+  <p>Dividing by √<i>d</i>, the square root of the key length, keeps the scores from getting so large that softmax gives one word everything.</p>
+
+  <figure>
+    <div class="controls">
+      <label>Sentence <input type="text" id="aText" value="the animal didn't cross the street because it was tired" style="width:min(430px,70vw)"></label>
+    </div>
+    <div class="controls">
+      <label>Head <select id="aHead"></select></label>
+      <label><input type="checkbox" id="aCausal" checked style="accent-color:var(--ink)"> Causal mask (as in GPT)</label>
+      <div class="btns"><button data-sent="the cat chased the dog because it was hungry" data-q="6" data-h="0">Try another</button><button data-sent="the girl read the book and she left" data-q="7" data-h="1">Verb example</button></div>
+    </div>
+    <p class="note" id="aHeadDesc"></p>
+    <div class="scroll"><svg id="aSvg" style="width:100%"></svg></div>
+    <figcaption><b>Figure 7.</b> Click any word to make it the query. Arcs and bars show how much of its attention goes to each word; the percentages always sum to 100%. With the causal mask on, a word can only see itself and the words before it.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="row">
+      <div><div class="lbl">Every query at once. Click a row.</div><div class="amat" id="aMat"></div></div>
+      <div style="flex:1;min-width:300px"><div class="lbl">The selected row, step by step</div><div id="aBreak"></div></div>
+    </div>
+    <figcaption><b>Figure 8.</b> The attention matrix: row <i>i</i> shows where word <i>i</i> looks, darker meaning more attention. Under the causal mask the upper triangle is hatched out, because when a model writes left to right, later words don't exist yet. The table shows how one row is computed.</figcaption>
+  </figure>
+
+  <figure>
+    <div id="aVec"></div>
+    <figcaption><b>Figure 9.</b> What attention changes. The output is the weighted average of the value vectors (here, the embeddings themselves). With the pronoun head, <i>it</i> starts as a pure pronoun and leaves carrying "noun" and "animate", so the next layer knows what it refers to.</figcaption>
+  </figure>
+
+  <p>In a real model the embedding has thousands of numbers instead of six labelled ones, and all the weights are learned. Each layer runs dozens of heads side by side, then sends every word's result through a dense network like the one in chapter 3. Stack a few dozen of those layers and read off the last word's vector, and you get a prediction for the next word. Generate that word, append it, and repeat: that loop is a large language model.</p>
+</section>
+
+<footer>Source on <a href="https://github.com/renfrrd-ai/nn-visualizer">GitHub</a>. Next chapters planned: LSTMs, a full CNN on a hand-drawn digit, and a full transformer block.</footer>
 </article>
 </div>
 
@@ -156,6 +196,7 @@
 <script src="js/pool.js"></script>
 <script src="js/mlp.js"></script>
 <script src="js/rnn.js"></script>
+<script src="js/attn.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
