@@ -14,6 +14,7 @@
   <p class="sub">Step through what each kind of layer actually computes, one number at a time.</p>
   <nav>
     <a href="#conv">Convolution</a>
+    <a href="#pool">Pooling</a>
   </nav>
 </header>
 <main>
@@ -59,9 +60,36 @@
   </div>
 </section>
 
+<section id="tab-pool">
+  <div class="card intro"><p><b>Pooling</b> shrinks a feature map. A window slides over it and keeps one number per window: the <b>max</b> (the strongest response) or the <b>average</b>. There are no weights to learn. It makes the network cheaper and a little more tolerant of small shifts. A detail that moves one pixel usually lands in the same window.</p></div>
+  <div class="card">
+    <div class="controls">
+      <label>Type <select id="pMode"><option value="max">Max pooling</option><option value="avg">Average pooling</option></select></label>
+      <label>Window <select id="pSize"><option value="2">2×2</option><option value="3">3×3</option></select></label>
+      <label>Stride <select id="pStride"><option value="2">2</option><option value="1">1</option></select></label>
+      <button id="pRand">Random input</button><button id="pFromConv">Use feature map from Convolution (after ReLU)</button>
+    </div>
+    <div class="controls">
+      <button class="primary" id="pPlay">▶ Play</button><button id="pStep">Step</button><button id="pAll">Show all</button><button id="pReset">Reset</button>
+      <label>Speed <input type="range" id="pSpeed" min="60" max="720" value="420"></label>
+    </div>
+    <div class="row">
+      <div><div class="lbl">Input feature map <span id="pInSize"></span></div><div class="grid" id="pIn"></div></div>
+      <div><div class="lbl">This window</div><div class="calc" id="pCalc" style="max-width:260px"></div></div>
+      <div><div class="lbl">Pooled output <span id="pOutSize"></span> · hover a cell</div><div class="grid" id="pOut"></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="lbl">Pooling a real feature map, again and again</div>
+    <p class="hint">The image from the Convolution tab, passed through your current kernel and ReLU, then pooled 2×2 (stride 2) three times. Each step halves the width and height. Detail disappears, but the strongest responses survive.</p>
+    <div class="row" id="pReal"></div>
+  </div>
+</section>
+
 </main>
 <script src="js/helpers.js"></script>
 <script src="js/conv.js"></script>
+<script src="js/pool.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
