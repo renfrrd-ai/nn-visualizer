@@ -15,6 +15,7 @@
   <nav>
     <a href="#conv">Convolution</a>
     <a href="#pool">Pooling</a>
+    <a href="#mlp">Dense network</a>
   </nav>
 </header>
 <main>
@@ -86,10 +87,33 @@
   </div>
 </section>
 
+<section id="tab-mlp">
+  <div class="card intro"><p>A <b>dense</b> (fully connected) network is the plain neural network. Every neuron takes <i>all</i> the outputs of the previous layer, multiplies each by a weight, adds them up with a bias (z = Σ w·a + b), then squashes the result with an activation function. Stack a few layers and you get a function that can learn almost anything. In a CNN, this is usually the last part, after the convolution and pooling layers.</p></div>
+  <div class="card">
+    <div class="row">
+      <div class="sliders">
+        <div class="lbl">Inputs</div>
+        <label>x₁<input type="range" min="-1" max="1" step="0.05" id="mx0"><span id="mv0"></span></label>
+        <label>x₂<input type="range" min="-1" max="1" step="0.05" id="mx1"><span id="mv1"></span></label>
+        <label>x₃<input type="range" min="-1" max="1" step="0.05" id="mx2"><span id="mv2"></span></label>
+        <div class="lbl" style="margin-top:10px">Hidden activation</div>
+        <select id="mAct"><option value="relu">ReLU · max(0, z)</option><option value="tanh">tanh</option><option value="sigmoid">sigmoid</option></select>
+        <button class="primary" id="mRun" style="margin-top:12px">▶ Run forward pass</button>
+        <button id="mNew">New random weights</button>
+      </div>
+      <div class="scroll" style="flex:1;min-width:300px"><svg id="mSvg" viewBox="0 0 760 400" style="width:100%;max-width:760px"></svg></div>
+    </div>
+    <div class="lbl" style="margin-top:8px">Click any neuron to see its math</div>
+    <div class="detail" id="mDetail">No neuron selected.</div>
+    <div class="legend"><span><i style="background:var(--pos)"></i>positive weight / activation</span><span><i style="background:var(--neg)"></i>negative</span><span>line thickness = |weight|</span></div>
+  </div>
+</section>
+
 </main>
 <script src="js/helpers.js"></script>
 <script src="js/conv.js"></script>
 <script src="js/pool.js"></script>
+<script src="js/mlp.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
