@@ -9,18 +9,18 @@ const mPos=(l,i)=>[100+l*190,200+(i-(ML[l]-1)/2)*80];
 function mRender(){
   mForward();const svg=$('#mSvg');let h='';
   const names=['Input','Hidden 1','Hidden 2','Output'];
-  ML.forEach((n,l)=>{h+=`<text x="${mPos(l,0)[0]}" y="28" fill="#8b93a7" font-size="12" text-anchor="middle">${names[l]}</text>`});
+  ML.forEach((n,l)=>{h+=`<text x="${mPos(l,0)[0]}" y="28" fill="#5d6470" font-size="14" font-style="italic" text-anchor="middle">${names[l]}</text>`});
   for(let l=0;l<mW.length;l++)mW[l].forEach((row,i)=>row.forEach((w,j)=>{const[a,b]=mPos(l,j),[c,d]=mPos(l+1,i);
     const sel=mSel&&mSel[0]===l+1&&mSel[1]===i,dim=mSel&&!sel;const on=l+1<=mReveal;
-    h+=`<line x1="${a+22}" y1="${b}" x2="${c-22}" y2="${d}" stroke="${w>0?'#f59e0b':'#3b82f6'}" stroke-width="${(0.6+Math.min(Math.abs(w),2)*1.6).toFixed(2)}" opacity="${dim?0.08:on?0.75:0.18}" class="${mFlow===l+1?'flow':''}"/>`;
-    if(sel)h+=`<text x="${(a+c)/2}" y="${(b+d)/2-4}" fill="#e6e9ef" font-size="10.5" text-anchor="middle" paint-order="stroke" stroke="#161b25" stroke-width="4">${sgn(w)}</text>`}));
+    h+=`<line x1="${a+22}" y1="${b}" x2="${c-22}" y2="${d}" stroke="${w>0?'#b07d12':'#2d5a8a'}" stroke-width="${(0.6+Math.min(Math.abs(w),2)*1.6).toFixed(2)}" opacity="${dim?0.08:on?0.7:0.15}" class="${mFlow===l+1?'flow':''}"/>`;
+    if(sel)h+=`<text x="${(a+c)/2}" y="${(b+d)/2-4}" fill="#1c2430" font-size="12" text-anchor="middle" paint-order="stroke" stroke="#fbfbf8" stroke-width="4">${sgn(w)}</text>`}));
   ML.forEach((n,l)=>{for(let i=0;i<n;i++){const[x,y]=mPos(l,i),on=l<=mReveal,v=mA[l][i];
-    const fill=on?div(v,l===ML.length-1?1:1.5):'#1d2330',rgb=on?divRGB(v,l===ML.length-1?1:1.5):[29,35,48];
+    const fill=on?div(v,l===ML.length-1?1:1.5):'#fbfbf8',rgb=on?divRGB(v,l===ML.length-1?1:1.5):[251,251,248];
     const sel=mSel&&mSel[0]===l&&mSel[1]===i;
-    h+=`<g style="cursor:${l?'pointer':'default'}" data-l="${l}" data-i="${i}"><circle cx="${x}" cy="${y}" r="22" fill="${fill}" stroke="${sel?'#f472b6':'#2a3242'}" stroke-width="${sel?3:1.5}"/>`;
-    h+=`<text x="${x}" y="${y+4}" fill="${ink(rgb)}" font-size="11" text-anchor="middle" pointer-events="none">${on?(l===ML.length-1?Math.round(v*100)+'%':v.toFixed(2)):'?'}</text></g>`;
-    if(l===0)h+=`<text x="${x-32}" y="${y+4}" fill="#8b93a7" font-size="12" text-anchor="end">x${'₁₂₃'[i]}</text>`;
-    if(l===ML.length-1)h+=`<text x="${x+32}" y="${y+4}" fill="${on?'#e6e9ef':'#8b93a7'}" font-size="12">class ${'AB'[i]}</text>`}});
+    h+=`<g style="cursor:${l?'pointer':'default'}" data-l="${l}" data-i="${i}"><circle cx="${x}" cy="${y}" r="22" fill="${fill}" stroke="${sel?'#c1121f':'#1c2430'}" stroke-width="${sel?2.5:1}"/>`;
+    h+=`<text x="${x}" y="${y+4}" fill="${ink(rgb)}" font-size="12.5" text-anchor="middle" pointer-events="none">${on?(l===ML.length-1?Math.round(v*100)+'%':v.toFixed(2)):'?'}</text></g>`;
+    if(l===0)h+=`<text x="${x-32}" y="${y+4}" fill="#1c2430" font-size="15" font-style="italic" text-anchor="end">x${'₁₂₃'[i]}</text>`;
+    if(l===ML.length-1)h+=`<text x="${x+32}" y="${y+4}" fill="${on?'#1c2430':'#5d6470'}" font-size="14">class ${'AB'[i]}</text>`}});
   svg.innerHTML=h;
   svg.querySelectorAll('g[data-l]').forEach(g=>g.addEventListener('click',()=>{const l=+g.dataset.l,i=+g.dataset.i;if(!l){mSel=null;mDetail();mRender();return}mSel=[l,i];mReveal=3;mRender();mDetail()}));
 }
@@ -28,8 +28,8 @@ function mDetail(){const el=$('#mDetail');if(!mSel){el.textContent='No neuron se
   const[l,i]=mSel,ws=mW[l-1][i],prev=mA[l-1],last=l===ML.length-1;
   const terms=ws.map((w,j)=>`(${sgn(w)})(${sgn(prev[j])})`).join(' + ');
   let s=`<b>${last?'Output neuron '+'AB'[i]:'Neuron '+(i+1)+' in Hidden '+l}</b>\n\nz = ${terms} + b(${sgn(mB[l-1][i])})\n  = <b>${sgn(mZ[l][i])}</b>\n\n`;
-  if(last)s+=`softmax turns the output z values into probabilities that sum to 1:\nz = [${mZ[l].map(sgn).join(', ')}]  →  p = [${mA[l].map(v=>(v*100).toFixed(1)+'%').join(', ')}]`;
-  else s+=`a = ${ACTN[$('#mAct').value]}(z) = <b>${sgn(mA[l][i])}</b>  ← this is what the next layer receives`;
+  if(last)s+=`Softmax turns the outputs' z values into probabilities that sum to 1.\nz = [${mZ[l].map(sgn).join(', ')}]  →  p = [${mA[l].map(v=>(v*100).toFixed(1)+'%').join(', ')}]`;
+  else s+=`a = ${ACTN[$('#mAct').value]}(z) = <b>${sgn(mA[l][i])}</b>    (this is what the next layer receives)`;
   el.innerHTML=s}
 function mSync(){for(let k=0;k<3;k++){$('#mx'+k).value=mX[k];$('#mv'+k).textContent=sgn(mX[k])}}
 for(let k=0;k<3;k++)$('#mx'+k).addEventListener('input',e=>{mX[k]=+e.target.value;$('#mv'+k).textContent=sgn(mX[k]);clearInterval(mTimer);mFlow=0;mReveal=3;mRender();mDetail()});

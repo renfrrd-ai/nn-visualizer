@@ -7,7 +7,7 @@ const PRESETS={
  blank:Array(10).fill('..........')
 };
 const KERNELS={
- vedge:{name:'Vertical edges (Sobel x)',k:[[-1,0,1],[-2,0,2],[-1,0,1]],d:'Left column negative, right column positive. Big output where brightness changes from left to right: vertical edges. Orange = dark→bright, blue = bright→dark.'},
+ vedge:{name:'Vertical edges (Sobel x)',k:[[-1,0,1],[-2,0,2],[-1,0,1]],d:'Left column negative, right column positive. Big output where brightness changes from left to right: vertical edges. Ochre marks dark-to-bright, blue marks bright-to-dark.'},
  hedge:{name:'Horizontal edges (Sobel y)',k:[[-1,-2,-1],[0,0,0],[1,2,1]],d:'Top row negative, bottom row positive. Responds to brightness changing from top to bottom: horizontal edges.'},
  outline:{name:'Outline',k:[[-1,-1,-1],[-1,8,-1],[-1,-1,-1]],d:'The centre pixel minus its 8 neighbours. Flat regions cancel to 0; outlines and corners stand out.'},
  sharpen:{name:'Sharpen',k:[[0,-1,0],[-1,5,-1],[0,-1,0]],d:'Keeps the pixel but subtracts its neighbours, which exaggerates differences.'},
@@ -46,21 +46,21 @@ let cFocus=null;
 function convPaint(){convPaintAt(cStepI)}
 function convPaintAt(focus){
   const ow=cOut[0].length,total=cOut.length*ow,m=Math.max(1e-9,...cOut.flat().map(Math.abs));
-  cP.forEach((row,i)=>row.forEach((v,j)=>{const d=cInG.cells[i][j];if(d.classList.contains('pad'))d.textContent='0';else paintCell(d,grayRGB(v),fmt(v))}));
+  cP.forEach((row,i)=>row.forEach((v,j)=>{const d=cInG.cells[i][j];if(d.classList.contains('pad'))d.textContent='0';else paintCell(d,paperGray(v),fmt(v))}));
   cOut.forEach((row,i)=>row.forEach((v,j)=>{const d=cOutG.cells[i][j],idx=i*ow+j;if(idx<=cStepI)paintCell(d,divRGB(v,m),fmt(v));else{d.classList.add('empty');d.textContent=''}}));
-  if(focus<0||focus>=total){cInG.ov.style.display='none';cOutG.ov.style.display='none';$('#cCalc').innerHTML='Press <b style="color:var(--text)">Play</b> or <b style="color:var(--text)">Step</b> to slide the kernel.';return}
+  if(focus<0||focus>=total){cInG.ov.style.display='none';cOutG.ov.style.display='none';$('#cCalc').innerHTML='Press Play or Step to slide the kernel.';return}
   const i=Math.floor(focus/ow),j=focus%ow,s=cStride;
   placeWin(cInG.ov,i*s,j*s,3,3);placeWin(cOutG.ov,i,j,1,1);
   let prods=[],html='<div class="cgrid">';
   for(let a=0;a<3;a++)for(let b=0;b<3;b++)prods.push([cP[i*s+a][j*s+b],cK[a][b]]);
   const pm=Math.max(1e-9,...prods.map(([v,w])=>Math.abs(v*w)));
-  prods.forEach(([v,w])=>{html+=`<div style="background:${div(v*w,pm)}">${fmt(v)}×${fmt(w,2)}</div>`});
-  html+=`</div><div class="sum">pixel × weight, summed<br>= <b>${fmt(cOut[i][j],2)}</b> → output (${i}, ${j})</div>`;
+  prods.forEach(([v,w])=>{const c=divRGB(v*w,pm);html+=`<div style="background:${css(c)};color:${ink(c)}">${fmt(v)}×${fmt(w,2)}</div>`});
+  html+=`</div><div class="sum">Sum of the nine products: <b>${fmt(cOut[i][j],2)}</b><br>written to row ${i+1}, column ${j+1}</div>`;
   $('#cCalc').innerHTML=html;
 }
-function convStop(){clearTimeout(cTimer);cTimer=null;$('#cPlay').textContent='▶ Play'}
+function convStop(){clearTimeout(cTimer);cTimer=null;$('#cPlay').textContent='Play'}
 function convTotal(){return cOut.length*cOut[0].length}
-$('#cPlay').onclick=()=>{if(cTimer){convStop();return}if(cStepI>=convTotal()-1)cStepI=-1;$('#cPlay').textContent='❚❚ Pause';
+$('#cPlay').onclick=()=>{if(cTimer){convStop();return}if(cStepI>=convTotal()-1)cStepI=-1;$('#cPlay').textContent='Pause';
   const tick=()=>{cStepI++;convPaint();if(cStepI>=convTotal()-1){convStop();return}cTimer=setTimeout(tick,780-+$('#cSpeed').value)};tick()};
 $('#cStep').onclick=()=>{convStop();if(cStepI<convTotal()-1)cStepI++;convPaint()};
 $('#cAll').onclick=()=>{convStop();cStepI=convTotal()-1;convPaint()};
@@ -86,27 +86,28 @@ function drawScene(){const c=document.createElement('canvas');c.width=c.height=S
   setFromCanvas(c)}
 const clampI=v=>v<0?0:v>=S?S-1:v;
 function convAt(gray,y,x,K){let s=0;for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)s+=gray[clampI(y+a)*S+clampI(x+b)]*K[a+1][b+1];return s}
-function realConv(){for(let y=0;y<S;y++)for(let x=0;x<S;x++)rOut[y*S+x]=convAt(rGray,y,x,cK);realRender();if(rLensPos)lens(rLensPos[0],rLensPos[1])}
+function realConv(){for(let y=0;y<S;y++)for(let x=0;x<S;x++)rOut[y*S+x]=convAt(rGray,y,x,cK);realRender();if(rLensPos)lens(rLensPos[0],rLensPos[1]);if(typeof poolRealRender==='function')poolRealRender()}
 function realRender(){
   const mode=$('#rMode').value,im=outCtx.createImageData(S,S);let m=1e-9;
   const val=v=>mode==='abs'?Math.abs(v):mode==='relu'?Math.max(0,v):v;
   for(let i=0;i<S*S;i++)m=Math.max(m,Math.abs(val(rOut[i])));
-  for(let i=0;i<S*S;i++){const c=i<rP?(mode==='signed'?divRGB(rOut[i],m):grayRGB(val(rOut[i])/m)):[22,27,37];im.data.set([c[0],c[1],c[2],255],i*4)}
+  for(let i=0;i<S*S;i++){const c=i<rP?(mode==='signed'?divRGB(rOut[i],m):inkRGB(val(rOut[i])/m)):[251,251,248];im.data.set([c[0],c[1],c[2],255],i*4)}
   outCtx.putImageData(im,0,0)}
-function drawBox(x,y){overCtx.clearRect(0,0,320,320);overCtx.strokeStyle='#f472b6';overCtx.lineWidth=2;overCtx.strokeRect((x-1)*2,(y-1)*2,6,6);overCtx.globalAlpha=.5;overCtx.beginPath();overCtx.arc(x*2+1,y*2+1,16,0,7);overCtx.stroke();overCtx.globalAlpha=1}
+function drawBox(x,y){overCtx.clearRect(0,0,320,320);overCtx.strokeStyle='#c1121f';overCtx.lineWidth=2;overCtx.strokeRect((x-1)*2,(y-1)*2,6,6);overCtx.globalAlpha=.5;overCtx.beginPath();overCtx.arc(x*2+1,y*2+1,16,0,7);overCtx.stroke();overCtx.globalAlpha=1}
 function lens(x,y){let html='<div class="cgrid">';for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const v=rGray[clampI(y+a)*S+clampI(x+b)],c=grayRGB(v);html+=`<div style="background:${css(c)};color:${ink(c)}">${v.toFixed(2)}×${fmt(cK[a+1][b+1],2)}</div>`}
-  $('#rLens').innerHTML=html+`</div><div class="sum">pixel (${x}, ${y})<br>sum = <b>${fmt(convAt(rGray,y,x,cK),2)}</b></div>`}
+  $('#rLens').innerHTML=html+`</div><div class="sum">At pixel (${x}, ${y})<br>sum: <b>${fmt(convAt(rGray,y,x,cK),2)}</b></div>`}
 $('#rOver').addEventListener('mousemove',e=>{if(rAnim)return;const r=e.target.getBoundingClientRect();const x=clampI(Math.floor((e.clientX-r.left)/r.width*S)),y=clampI(Math.floor((e.clientY-r.top)/r.height*S));rLensPos=[x,y];drawBox(x,y);lens(x,y)});
 $('#rOver').addEventListener('mouseleave',()=>{if(!rAnim)overCtx.clearRect(0,0,320,320)});
-$('#rSweep').onclick=()=>{if(rAnim){cancelAnimationFrame(rAnim);rAnim=null;rP=S*S;realRender();overCtx.clearRect(0,0,320,320);$('#rSweep').textContent='▶ Sweep kernel';return}
-  rP=0;$('#rSweep').textContent='■ Stop';const step=S*S/(6*60);
+$('#rSweep').onclick=()=>{if(rAnim){cancelAnimationFrame(rAnim);rAnim=null;rP=S*S;realRender();overCtx.clearRect(0,0,320,320);$('#rSweep').textContent='Sweep kernel';return}
+  rP=0;$('#rSweep').textContent='Stop';const step=S*S/(6*60);
   const f=()=>{rP=Math.min(S*S,rP+step);const p=Math.floor(rP)-1,x=p%S,y=Math.floor(p/S);drawBox(x,y);lens(x,y);realRender();
-    if(rP>=S*S){rAnim=null;$('#rSweep').textContent='▶ Sweep kernel';setTimeout(()=>overCtx.clearRect(0,0,320,320),400);return}rAnim=requestAnimationFrame(f)};rAnim=requestAnimationFrame(f)};
+    if(rP>=S*S){rAnim=null;$('#rSweep').textContent='Sweep kernel';setTimeout(()=>overCtx.clearRect(0,0,320,320),400);return}rAnim=requestAnimationFrame(f)};rAnim=requestAnimationFrame(f)};
 $('#rMode').onchange=realRender;
 $('#rScene').onclick=drawScene;
 $('#rFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f),img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');const s=Math.max(S/img.width,S/img.height),w=img.width*s,h=img.height*s;x.drawImage(img,(S-w)/2,(S-h)/2,w,h);setFromCanvas(c);URL.revokeObjectURL(url)};img.src=url};
 
 
 // init
+rLensPos=[21,46]; // start the lens on the circle's left edge so the panel isn't empty
 $('#cKerDesc').textContent=KERNELS.vedge.d;kernelPaint();convBuild();drawScene();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{drawScene()});

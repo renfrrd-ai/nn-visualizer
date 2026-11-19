@@ -3,132 +3,154 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Neural Networks, Visualized</title>
+<title>How Neural Networks Compute</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<header>
-  <h1>Neural Networks, Visualized</h1>
-  <p class="sub">Step through what each kind of layer actually computes, one number at a time.</p>
-  <nav>
-    <a href="#conv">Convolution</a>
-    <a href="#pool">Pooling</a>
-    <a href="#mlp">Dense network</a>
-    <a href="#rnn">RNN</a>
-  </nav>
+<div class="page">
+<nav class="toc" aria-label="Contents">
+  <p>Contents</p>
+  <ol>
+    <li><a href="#conv">Convolution</a></li>
+    <li><a href="#pool">Pooling</a></li>
+    <li><a href="#mlp">Dense networks</a></li>
+    <li><a href="#rnn">Recurrent networks</a></li>
+  </ol>
+</nav>
+
+<article>
+<header class="title">
+  <h1>How neural networks compute</h1>
+  <p class="lead">Every layer in a neural network is arithmetic: multiply, add, squash. This page lets you watch that arithmetic happen one number at a time, starting with the layers that let a network see images, and ending with one that remembers.</p>
+  <p class="byline">Renfred Alonge, November 2026</p>
 </header>
-<main>
 
 <section id="tab-conv">
-  <div class="card intro"><p>A convolutional layer slides a small grid of weights, the <b>kernel</b> (or filter), across the image. At each position it multiplies the kernel by the pixels underneath, adds the products up, and writes that single number into the output, called a <b>feature map</b>. Different kernels light up for different patterns: vertical edges, horizontal edges, outlines. In a real CNN the kernel values aren't hand-picked like these; they're learned during training.</p></div>
-  <div class="card">
+  <h2 id="conv"><span class="n">1</span>Convolution</h2>
+  <p>A convolutional layer slides a small grid of weights, the <b>kernel</b>, across an image. At each position it multiplies every weight by the pixel underneath, adds up the nine products, and writes that one number into a new grid called a <b>feature map</b>.</p>
+  <p>The kernel's numbers decide what it notices. A kernel with negatives on the left and positives on the right gives a large output only where the image gets brighter from left to right, so it finds vertical edges. In a trained network nobody writes these numbers by hand; they're learned.</p>
+
+  <figure>
     <div class="controls">
-      <label>Image <select id="cImg"><option value="seven">Digit 7</option><option value="x">X</option><option value="box">Box</option><option value="plus">Plus</option><option value="blank">Blank (draw your own)</option></select></label>
+      <label>Image <select id="cImg"><option value="seven">Digit 7</option><option value="x">X</option><option value="box">Box</option><option value="plus">Plus</option><option value="blank">Blank</option></select></label>
       <label>Kernel <select id="cKer"></select></label>
       <label>Stride <select id="cStride"><option>1</option><option>2</option></select></label>
       <label>Padding <select id="cPad"><option>0</option><option>1</option></select></label>
     </div>
     <div class="controls">
-      <button class="primary" id="cPlay">▶ Play</button><button id="cStep">Step</button><button id="cAll">Show all</button><button id="cReset">Reset</button>
+      <div class="btns"><button class="primary" id="cPlay">Play</button><button id="cStep">Step</button><button id="cAll">Show all</button><button id="cReset">Reset</button></div>
       <label>Speed <input type="range" id="cSpeed" min="60" max="720" value="480"></label>
     </div>
-    <p class="hint" id="cKerDesc"></p>
+    <p class="note" id="cKerDesc"></p>
     <div class="row">
-      <div><div class="lbl">Input <span id="cInSize"></span> · click &amp; drag to draw</div><div class="grid" id="cIn"></div></div>
+      <div><div class="lbl">Input <span id="cInSize"></span>. Click and drag to draw.</div><div class="grid" id="cIn"></div></div>
       <div>
-        <div class="lbl">Kernel 3×3 · editable</div><div class="kgrid" id="cK"></div>
-        <div class="lbl" style="margin-top:20px">This position</div><div class="calc" id="cCalc"></div>
+        <div class="lbl">Kernel. Type to change a weight.</div><div class="kgrid" id="cK"></div>
+        <div class="lbl" style="margin-top:22px">Pixel × weight at this position</div><div class="calc" id="cCalc"></div>
       </div>
-      <div><div class="lbl">Feature map <span id="cOutSize"></span> · hover a cell</div><div class="grid" id="cOut"></div>
-        <div class="legend"><span><i style="background:var(--pos)"></i>positive</span><span><i style="background:var(--neg)"></i>negative</span></div></div>
+      <div><div class="lbl">Feature map <span id="cOutSize"></span>. Hover a cell.</div><div class="grid" id="cOut"></div>
+        <div class="key"><span><i style="background:var(--pos)"></i>positive</span><span><i style="background:var(--neg)"></i>negative</span></div></div>
     </div>
-  </div>
-  <div class="card">
-    <div class="lbl">The same kernel on a real image</div>
-    <p class="hint">Here the kernel visits every pixel of a 160×160 grayscale picture (stride 1, edges extended). Hover the image to see the 3×3 patch under the kernel at that spot.</p>
+    <figcaption><b>Figure 1.</b> One kernel, one image. The red square is the kernel's current position; the cell it produces is outlined in the feature map. Padding adds a border of zeros (hatched) so the kernel can sit on the edge pixels; stride 2 skips every other position and halves the output.</figcaption>
+  </figure>
+
+  <p>The same nine weights work on a real photograph. The only difference is scale: a 160×160 image means 25,600 positions instead of 64.</p>
+
+  <figure>
     <div class="controls">
-      <button class="primary" id="rSweep">▶ Sweep kernel</button>
-      <label class="file">Upload your own image<input type="file" accept="image/*" id="rFile"></label>
-      <button id="rScene">Sample scene</button>
-      <label>Show output as <select id="rMode"><option value="abs">|value| (pattern strength)</option><option value="relu">ReLU (positive only)</option><option value="signed">Signed (orange + / blue −)</option></select></label>
+      <div class="btns"><button class="primary" id="rSweep">Sweep kernel</button><label class="file">Upload an image<input type="file" accept="image/*" id="rFile"></label><button id="rScene">Use sample image</button></div>
+      <label>Show <select id="rMode"><option value="abs">strength, |value|</option><option value="relu">positive only (ReLU)</option><option value="signed">sign, blue and ochre</option></select></label>
     </div>
     <div class="row">
-      <div><div class="lbl">Input (grayscale)</div><div class="stack"><canvas id="rSrc" width="160" height="160"></canvas><canvas id="rOver" width="320" height="320" style="image-rendering:auto"></canvas></div></div>
+      <div><div class="lbl">Input, in grayscale. Hover to inspect.</div><div class="stack"><canvas id="rSrc" width="160" height="160"></canvas><canvas id="rOver" width="320" height="320" style="image-rendering:auto"></canvas></div></div>
       <div><div class="lbl">Under the kernel</div><div class="calc" id="rLens"></div></div>
       <div><div class="lbl">Feature map</div><canvas id="rOut" class="pix" width="160" height="160"></canvas></div>
     </div>
-  </div>
+    <figcaption><b>Figure 2.</b> The kernel from Figure 1 applied at every pixel, with edge pixels repeated so the output stays 160×160. Darker ink means a stronger response. Change the kernel above and this figure updates.</figcaption>
+  </figure>
 </section>
 
 <section id="tab-pool">
-  <div class="card intro"><p><b>Pooling</b> shrinks a feature map. A window slides over it and keeps one number per window: the <b>max</b> (the strongest response) or the <b>average</b>. There are no weights to learn. It makes the network cheaper and a little more tolerant of small shifts. A detail that moves one pixel usually lands in the same window.</p></div>
-  <div class="card">
+  <h2 id="pool"><span class="n">2</span>Pooling</h2>
+  <p>A feature map is as large as the image it came from. <b>Pooling</b> shrinks it. A window slides over the map and keeps one number per window, either the largest (max pooling) or the average. Nothing is learned here; there are no weights.</p>
+  <p>Shrinking is useful. Later layers have fewer numbers to process, and a feature that shifts by a pixel usually stays in the same window, so the network cares less about exactly where something is.</p>
+
+  <figure>
     <div class="controls">
-      <label>Type <select id="pMode"><option value="max">Max pooling</option><option value="avg">Average pooling</option></select></label>
+      <label>Type <select id="pMode"><option value="max">max</option><option value="avg">average</option></select></label>
       <label>Window <select id="pSize"><option value="2">2×2</option><option value="3">3×3</option></select></label>
       <label>Stride <select id="pStride"><option value="2">2</option><option value="1">1</option></select></label>
-      <button id="pRand">Random input</button><button id="pFromConv">Use feature map from Convolution (after ReLU)</button>
+      <div class="btns"><button id="pRand">New random input</button><button id="pFromConv">Use Figure 1's feature map</button></div>
     </div>
     <div class="controls">
-      <button class="primary" id="pPlay">▶ Play</button><button id="pStep">Step</button><button id="pAll">Show all</button><button id="pReset">Reset</button>
+      <div class="btns"><button class="primary" id="pPlay">Play</button><button id="pStep">Step</button><button id="pAll">Show all</button><button id="pReset">Reset</button></div>
       <label>Speed <input type="range" id="pSpeed" min="60" max="720" value="420"></label>
     </div>
     <div class="row">
-      <div><div class="lbl">Input feature map <span id="pInSize"></span></div><div class="grid" id="pIn"></div></div>
+      <div><div class="lbl">Feature map <span id="pInSize"></span></div><div class="grid" id="pIn"></div></div>
       <div><div class="lbl">This window</div><div class="calc" id="pCalc" style="max-width:260px"></div></div>
-      <div><div class="lbl">Pooled output <span id="pOutSize"></span> · hover a cell</div><div class="grid" id="pOut"></div></div>
+      <div><div class="lbl">Pooled <span id="pOutSize"></span>. Hover a cell.</div><div class="grid" id="pOut"></div></div>
     </div>
-  </div>
-  <div class="card">
-    <div class="lbl">Pooling a real feature map, again and again</div>
-    <p class="hint">The image from the Convolution tab, passed through your current kernel and ReLU, then pooled 2×2 (stride 2) three times. Each step halves the width and height. Detail disappears, but the strongest responses survive.</p>
-    <div class="row" id="pReal"></div>
-  </div>
+    <figcaption><b>Figure 3.</b> Pooling step by step. With max pooling, the cell that wins each window is boxed; the others are discarded. Using Figure 1's feature map applies ReLU first, setting negatives to zero, as a real CNN would.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="row" id="pReal" style="gap:20px"></div>
+    <figcaption><b>Figure 4.</b> Figure 2's feature map after ReLU, pooled 2×2 three times using the type chosen in Figure 3. Each step keeps a quarter of the numbers. Fine detail goes first; the strongest edges last longest.</figcaption>
+  </figure>
 </section>
 
 <section id="tab-mlp">
-  <div class="card intro"><p>A <b>dense</b> (fully connected) network is the plain neural network. Every neuron takes <i>all</i> the outputs of the previous layer, multiplies each by a weight, adds them up with a bias (z = Σ w·a + b), then squashes the result with an activation function. Stack a few layers and you get a function that can learn almost anything. In a CNN, this is usually the last part, after the convolution and pooling layers.</p></div>
-  <div class="card">
+  <h2 id="mlp"><span class="n">3</span>Dense networks</h2>
+  <p>After convolution and pooling, a CNN usually ends with a few <b>dense</b> layers, and on their own they make up the plain neural network. Every neuron reads every output of the layer before it:</p>
+  <p class="eq"><i>z</i> = <i>w</i><sub>1</sub><i>a</i><sub>1</sub> + <i>w</i><sub>2</sub><i>a</i><sub>2</sub> + … + <i>b</i>, &nbsp;&nbsp; <i>a</i> = <i>f</i>(<i>z</i>)</p>
+  <p>The weighted sum <i>z</i> goes through an activation function <i>f</i>, which bends the line. Without that bend, stacking layers would collapse into one big linear function.</p>
+
+  <figure>
     <div class="row">
       <div class="sliders">
         <div class="lbl">Inputs</div>
-        <label>x₁<input type="range" min="-1" max="1" step="0.05" id="mx0"><span id="mv0"></span></label>
-        <label>x₂<input type="range" min="-1" max="1" step="0.05" id="mx1"><span id="mv1"></span></label>
-        <label>x₃<input type="range" min="-1" max="1" step="0.05" id="mx2"><span id="mv2"></span></label>
-        <div class="lbl" style="margin-top:10px">Hidden activation</div>
-        <select id="mAct"><option value="relu">ReLU · max(0, z)</option><option value="tanh">tanh</option><option value="sigmoid">sigmoid</option></select>
-        <button class="primary" id="mRun" style="margin-top:12px">▶ Run forward pass</button>
-        <button id="mNew">New random weights</button>
+        <label><span><i>x</i>₁</span><input type="range" min="-1" max="1" step="0.05" id="mx0"><span id="mv0"></span></label>
+        <label><span><i>x</i>₂</span><input type="range" min="-1" max="1" step="0.05" id="mx1"><span id="mv1"></span></label>
+        <label><span><i>x</i>₃</span><input type="range" min="-1" max="1" step="0.05" id="mx2"><span id="mv2"></span></label>
+        <div class="lbl" style="margin-top:10px">Activation <i>f</i> in hidden layers</div>
+        <select id="mAct"><option value="relu">ReLU, max(0, z)</option><option value="tanh">tanh</option><option value="sigmoid">sigmoid</option></select>
+        <div class="btns" style="margin-top:12px;flex-direction:column"><button class="primary" id="mRun">Run forward pass</button><button id="mNew">New random weights</button></div>
       </div>
       <div class="scroll" style="flex:1;min-width:300px"><svg id="mSvg" viewBox="0 0 760 400" style="width:100%;max-width:760px"></svg></div>
     </div>
-    <div class="lbl" style="margin-top:8px">Click any neuron to see its math</div>
+    <div class="lbl" style="margin-top:14px">Click a neuron to see its arithmetic</div>
     <div class="detail" id="mDetail">No neuron selected.</div>
-    <div class="legend"><span><i style="background:var(--pos)"></i>positive weight / activation</span><span><i style="background:var(--neg)"></i>negative</span><span>line thickness = |weight|</span></div>
-  </div>
+    <figcaption><b>Figure 5.</b> A 3–4–4–2 network. Ochre lines are positive weights, blue are negative, and thickness shows size. The two outputs pass through softmax so they read as probabilities. The weights are random, so the "classes" mean nothing yet; training is what would give them meaning.</figcaption>
+  </figure>
 </section>
 
 <section id="tab-rnn">
-  <div class="card intro"><p>A <b>recurrent</b> network reads a sequence one item at a time and carries a <b>hidden state</b> h forward, a small vector that acts as its memory. At every step it reuses the <i>same</i> weights: it mixes the new input with the previous hidden state, then squashes the result with tanh. Drawn "unrolled" like below, it looks like a chain of copies, but it's one network applied repeatedly.</p></div>
-  <div class="card">
+  <h2 id="rnn"><span class="n">4</span>Recurrent networks</h2>
+  <p>Every network so far sees its whole input at once. Text, speech and time series arrive in order, so a <b>recurrent</b> network reads one item at a time and keeps a small vector <i>h</i>, the <b>hidden state</b>, that carries what it has seen so far:</p>
+  <p class="eq"><i>h<sub>t</sub></i> = tanh( <i>W</i><sub>xh</sub><i>x<sub>t</sub></i> + <i>W</i><sub>hh</sub><i>h</i><sub><i>t</i>−1</sub> + <i>b</i> )</p>
+  <p>The same weights are used at every step. Drawing it "unrolled" makes it look like a chain of copies, but it is one network applied again and again.</p>
+
+  <figure>
     <div class="controls">
-      <label>Sequence <input type="text" id="rnnWord" value="hello" maxlength="8" style="width:120px"></label>
-      <button class="primary" id="rnnPlay">▶ Play</button><button id="rnnStep">Step</button><button id="rnnAll">Show all</button><button id="rnnReset">Reset</button>
+      <label>Sequence <input type="text" id="rnnWord" value="hello" maxlength="8" style="width:110px"></label>
+      <div class="btns"><button class="primary" id="rnnPlay">Play</button><button id="rnnStep">Step</button><button id="rnnAll">Show all</button><button id="rnnReset">Reset</button></div>
       <label>Speed <input type="range" id="rnnSpeed" min="200" max="1600" value="1000"></label>
     </div>
-    <p class="hint">Try <b>cat</b> vs <b>bat</b>: the last two letters are the same, but the final hidden state is different, because the first letter's influence is carried forward through h. (The weights are random, not trained. The point is the mechanics, not the predictions.)</p>
-    <div class="eq">hₜ = tanh( W<sub>xh</sub>·xₜ + W<sub>hh</sub>·hₜ₋₁ + b )</div>
     <div class="scroll"><svg id="rnnSvg" height="430"></svg></div>
-  </div>
-  <div class="card">
-    <div class="lbl" id="rnnCalcTitle">Step calculation</div>
+    <div class="lbl" id="rnnCalcTitle" style="margin-top:12px">Step calculation</div>
     <div class="row" id="rnnCalc" style="gap:10px"></div>
-  </div>
+    <figcaption><b>Figure 6.</b> Each character is fed in as a one-hot column, and the red arrows show where information flows at the current step. Try <i>cat</i>, then <i>bat</i>: the last two letters match, yet the final hidden state differs, because the first letter is still in <i>h</i>.</figcaption>
+  </figure>
 </section>
 
-</main>
+<footer>Source on <a href="https://github.com/renfrrd-ai/nn-visualizer">GitHub</a>. Next chapters planned: LSTMs, a full CNN on a hand-drawn digit, and attention.</footer>
+</article>
+</div>
+
 <script src="js/helpers.js"></script>
 <script src="js/conv.js"></script>
 <script src="js/pool.js"></script>
